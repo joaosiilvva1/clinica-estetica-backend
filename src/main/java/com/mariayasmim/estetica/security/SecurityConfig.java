@@ -37,6 +37,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/treatments/**", "/api/testimonials/**").permitAll()
                         // A LINHA ABAIXO LIBERA O ENVIO DOS DEPOIMENTOS:
                         .requestMatchers(HttpMethod.POST, "/api/testimonials/public").permitAll()
+                        // Cliente final agenda sem conta (convidado) — sem isto, /api/appointments/public
+                        // caía em anyRequest().authenticated() e devolvia 401 pra qualquer visitante.
+                        .requestMatchers(HttpMethod.GET, "/api/appointments/public/**", "/api/professionals/public").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/appointments/public").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
