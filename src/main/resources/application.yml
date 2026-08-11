@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: estetica
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/estetica_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:admin123}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          time_zone: UTC
+
+jwt:
+  secret: ${JWT_SECRET:minhaChaveSecretaSuperSeguraParaTesteComMaisDeTrintaEDoisCaracteres123}
+  expiration-ms: ${JWT_EXPIRATION_MS:3600000}
+
+business:
+  opening-hour: 9
+  closing-hour: 18
+  zone-id: America/Sao_Paulo
+  slot-granularity-minutes: 30
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

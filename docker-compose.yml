@@ -1,0 +1,50 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: estetica-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: estetica_db
+      POSTGRES_USER: estetica_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme_in_prod}
+    ports:
+      - "5432:5432"
+    volumes:
+      - estetica_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U estetica_user -d estetica_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - estetica-net
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: estetica-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/estetica_db
+      SPRING_DATASOURCE_USERNAME: estetica_user
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-changeme_in_prod}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-3600000}
+    ports:
+      - "8080:8080"
+    networks:
+      - estetica-net
+
+networks:
+  estetica-net:
+    driver: bridge
+
+volumes:
+  estetica_pg_data:
