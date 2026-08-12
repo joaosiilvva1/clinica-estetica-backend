@@ -1,41 +1,56 @@
-package com.mariayasmim.estetica;
+package com.mariayasmim.estetica.controller;
 
-import com.mariayasmim.estetica.entity.Appointment;
-import com.mariayasmim.estetica.repository.AppointmentRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.mariayasmim.estetica.dto.AppointmentRequestDTO;
+import com.mariayasmim.estetica.dto.AppointmentResponseDTO;
+import com.mariayasmim.estetica.enums.AppointmentStatus;
+import com.mariayasmim.estetica.service.AppointmentService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.OffsetDateTime;
-import java.util.Map;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/appointments")
-@CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class AppointmentController {
 
-    @Autowired
-    private AppointmentRepository appointmentRepository;
+    private final AppointmentService appointmentService;
 
-    @PostMapping("/public")
-    public ResponseEntity<?> createPublicAppointment(@RequestBody Map<String, Object> payload) {
-        try {
-            String clientName = (String) payload.get("clientName");
-            String clientWhatsapp = (String) payload.get("clientWhatsapp");
-            String scheduledAtStr = (String) payload.get("scheduledAt");
+    // --- Público: fluxo de agendamento da cliente final (sem conta) ---
 
-            Appointment appointment = new Appointment();
-            appointment.setClientName(clientName);
-            appointment.setClientWhatsapp(clientWhatsapp);
-            
-            // Converte a string da data para OffsetDateTime e depois para Instant que a entidade usa
-            appointment.setScheduledAt(OffsetDateTime.parse(scheduledAtStr).toInstant());
+    @PostMapping("/api/appointments/public")
+    public ResponseEntity<AppointmentResponseDTO> createPublicAppointment(
+            @Valid @RequestBody AppointmentRequestDTO dto) {
+        AppointmentResponseDTO created = appointmentService.create(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
 
-            Appointment saved = appointmentRepository.save(appointment);
-            return ResponseEntity.ok(saved);
+    @GetMapping("/api/appointments/public/available-slots")
+    public ResponseEntity<List<Instant>> getAvailableSlots(
+            @RequestParam UUID professionalId,
+            @RequestParam UUID treatmentId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        return ResponseEntity.ok(appointmentService.getAvailableSlots(professionalId, treatmentId, date));
+    }
 
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
-        }
+    // --- Administrativo: agenda da profissional, protegido por ROLE_ADMIN em SecurityConfig ---
+
+    @GetMapping("/api/admin/appointments")
+    public ResponseEntity<List<AppointmentResponseDTO>> listByProfessionalAndDate(
+            @RequestParam UUID professionalId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        return ResponseEntity.ok(appointmentService.listByProfessionalAndDate(professionalId, date));
+    }
+
+    @PatchMapping("/api/admin/appointments/{id}/status")
+    public ResponseEntity<AppointmentResponseDTO> updateStatus(
+            @PathVariable UUID id, @RequestParam AppointmentStatus status) {
+        return ResponseEntity.ok(appointmentService.updateStatus(id, status));
     }
 }
