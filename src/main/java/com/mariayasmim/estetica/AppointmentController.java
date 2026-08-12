@@ -27,7 +27,9 @@ public class AppointmentController {
             Appointment appointment = new Appointment();
             appointment.setClientName(clientName);
             appointment.setClientWhatsapp(clientWhatsapp);
-            appointment.setScheduledAt(OffsetDateTime.parse(scheduledAtStr));
+            
+            // Converte a string da data para OffsetDateTime e depois para Instant que a entidade usa
+            appointment.setScheduledAt(OffsetDateTime.parse(scheduledAtStr).toInstant());
 
             Appointment saved = appointmentRepository.save(appointment);
             return ResponseEntity.ok(saved);
