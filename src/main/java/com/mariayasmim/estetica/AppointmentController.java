@@ -1,59 +1,25 @@
-package com.mariayasmim.estetica.controller;
+package com.mariayasmim.estetica;
 
-import com.mariayasmim.estetica.dto.AppointmentRequestDTO;
-import com.mariayasmim.estetica.dto.AppointmentResponseDTO;
-import com.mariayasmim.estetica.dto.AppointmentStatusUpdateDTO;
-import com.mariayasmim.estetica.service.AppointmentService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
+import com.mariayasmim.estetica.entity.Appointment;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.UUID;
-
 @RestController
-@RequiredArgsConstructor
+@RequestMapping("/api/appointments")
+@CrossOrigin(origins = "*")
 public class AppointmentController {
 
-    private final AppointmentService appointmentService;
+    @Autowired
+    private com.mariayasmim.estetica.repository.AppointmentRepository appointmentRepository;
 
-    // --- Público: cliente final sem conta consulta horários e agenda ---
+    @PostMapping("/public")
+    public ResponseEntity<?> createPublicAppointment(@RequestBody Appointment appointment) {
+        // 1. Salva o agendamento no banco de dados
+        Appointment saved = appointmentRepository.save(appointment);
 
-    @GetMapping("/api/appointments/public/available-slots")
-    public ResponseEntity<List<Instant>> availableSlots(
-            @RequestParam UUID professionalId,
-            @RequestParam UUID treatmentId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
-    ) {
-        return ResponseEntity.ok(appointmentService.getAvailableSlots(professionalId, treatmentId, date));
-    }
+        // 2. Disparo automático ou notificação (pode ser integrado aqui futuramente)
 
-    @PostMapping("/api/appointments/public")
-    public ResponseEntity<AppointmentResponseDTO> create(@Valid @RequestBody AppointmentRequestDTO dto) {
-        AppointmentResponseDTO created = appointmentService.create(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
-    }
-
-    // --- Administrativo: protegido por ROLE_ADMIN em SecurityConfig ---
-
-    @GetMapping("/api/admin/appointments")
-    public ResponseEntity<List<AppointmentResponseDTO>> listByProfessionalAndDate(
-            @RequestParam UUID professionalId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
-    ) {
-        return ResponseEntity.ok(appointmentService.listByProfessionalAndDate(professionalId, date));
-    }
-
-    @PatchMapping("/api/admin/appointments/{id}/status")
-    public ResponseEntity<AppointmentResponseDTO> updateStatus(
-            @PathVariable UUID id,
-            @Valid @RequestBody AppointmentStatusUpdateDTO dto
-    ) {
-        return ResponseEntity.ok(appointmentService.updateStatus(id, dto.status()));
+        return ResponseEntity.ok(saved);
     }
 }
