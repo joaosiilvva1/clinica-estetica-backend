@@ -1,7 +1,6 @@
 package com.mariayasmim.estetica.security;
 
 import com.mariayasmim.estetica.security.JwtFilter;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -19,7 +18,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -40,7 +38,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Garante que a verificação de CORS passe sem bloqueio
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/treatments/**", "/api/testimonials/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/testimonials/public").permitAll()
@@ -54,13 +52,13 @@ public class SecurityConfig {
         return http.build();
     }
 
+    // A MÁGICA ACONTECE AQUI:
     @Bean
-    public CorsConfigurationSource corsConfigurationSource(
-            // URL da Vercel corrigida para bater exatamente com o seu site no ar:
-            @Value("${CORS_ALLOWED_ORIGINS:http://localhost:8081,https://mariayasmimestetica.vercel.app}") String allowedOrigins
-    ) {
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+        
+        // AllowedOriginPatterns("*") força a liberação total para qualquer domínio (Vercel, localhost, etc)
+        configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
