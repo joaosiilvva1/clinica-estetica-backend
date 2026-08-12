@@ -40,12 +40,10 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Garante que a verificação de CORS passe sem bloqueio
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/treatments/**", "/api/testimonials/**").permitAll()
-                        // A LINHA ABAIXO LIBERA O ENVIO DOS DEPOIMENTOS:
                         .requestMatchers(HttpMethod.POST, "/api/testimonials/public").permitAll()
-                        // Cliente final agenda sem conta (convidado) — sem isto, /api/appointments/public
-                        // caía em anyRequest().authenticated() e devolvia 401 pra qualquer visitante.
                         .requestMatchers(HttpMethod.GET, "/api/appointments/public/**", "/api/professionals/public").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/appointments/public").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
@@ -56,17 +54,10 @@ public class SecurityConfig {
         return http.build();
     }
 
-    /**
-     * Antes, o comentário aqui dizia "utiliza configuração global de CORS", mas esse bean
-     * nunca existia — .cors(cors -> {}) sem um CorsConfigurationSource não libera nada, então
-     * qualquer chamada do frontend (domínio diferente do backend, ex.: Vercel vs Render) era
-     * bloqueada pelo navegador antes de chegar aqui. Origens configuráveis via env var
-     * CORS_ALLOWED_ORIGINS (separadas por vírgula), pra não precisar recompilar ao trocar
-     * domínio de deploy.
-     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource(
-            @Value("${CORS_ALLOWED_ORIGINS:http://localhost:8081,https://clinica-estetica-mobile.vercel.app}") String allowedOrigins
+            // URL da Vercel corrigida para bater exatamente com o seu site no ar:
+            @Value("${CORS_ALLOWED_ORIGINS:http://localhost:8081,https://mariayasmimestetica.vercel.app}") String allowedOrigins
     ) {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
