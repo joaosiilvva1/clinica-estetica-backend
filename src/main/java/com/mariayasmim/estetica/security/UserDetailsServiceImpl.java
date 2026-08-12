@@ -1,6 +1,6 @@
 package com.mariayasmim.estetica.security;
 
-import com.mariayasmim.estetica.service.com.mariayasmim.estetica.UserRepository;
+import com.mariayasmim.estetica.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

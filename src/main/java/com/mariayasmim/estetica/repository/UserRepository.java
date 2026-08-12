@@ -1,4 +1,4 @@
-package com.mariayasmim.estetica.service.com.mariayasmim.estetica;
+package com.mariayasmim.estetica.repository;
 
 import com.mariayasmim.estetica.entity.User;
 import com.mariayasmim.estetica.enums.Role;

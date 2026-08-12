@@ -4,7 +4,7 @@ import com.mariayasmim.estetica.dto.ProfessionalDTO;
 import com.mariayasmim.estetica.entity.User;
 import com.mariayasmim.estetica.enums.Role;
 import com.mariayasmim.estetica.exception.ResourceNotFoundException;
-import com.mariayasmim.estetica.service.com.mariayasmim.estetica.UserRepository;
+import com.mariayasmim.estetica.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

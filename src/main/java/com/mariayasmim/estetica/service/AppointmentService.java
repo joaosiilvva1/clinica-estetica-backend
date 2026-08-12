@@ -10,7 +10,7 @@ import com.mariayasmim.estetica.exception.ResourceNotFoundException;
 import com.mariayasmim.estetica.exception.SlotUnavailableException;
 import com.mariayasmim.estetica.repository.AppointmentRepository;
 import com.mariayasmim.estetica.repository.TreatmentRepository;
-import com.mariayasmim.estetica.service.com.mariayasmim.estetica.UserRepository;
+import com.mariayasmim.estetica.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
