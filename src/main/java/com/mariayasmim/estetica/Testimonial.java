@@ -11,6 +11,10 @@ public class Testimonial {
     private int rating;
     private String comment;
 
+    // Depoimento só aparece no site depois que a administradora aprovar.
+    // Fica false por padrão (pendente) até a aprovação manual no painel admin.
+    private boolean approved = false;
+
     // Gerar Getters e Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -20,4 +24,6 @@ public class Testimonial {
     public void setRating(int rating) { this.rating = rating; }
     public String getComment() { return comment; }
     public void setComment(String comment) { this.comment = comment; }
+    public boolean isApproved() { return approved; }
+    public void setApproved(boolean approved) { this.approved = approved; }
 }
