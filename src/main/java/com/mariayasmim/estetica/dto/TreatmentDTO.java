@@ -1,27 +1,26 @@
 package com.mariayasmim.estetica.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import com.mariayasmim.estetica.entity.Treatment;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Getter
-@Setter
-public class TreatmentRequestDTO {
-
-    @NotBlank(message = "Nome é obrigatório")
+@AllArgsConstructor
+public class TreatmentResponseDTO {
+    private UUID id;
     private String name;
-
     private String description;
-
-    @NotNull(message = "Preço é obrigatório")
-    @Positive(message = "Preço deve ser maior que zero")
     private BigDecimal price;
-
-    @NotNull(message = "Duração é obrigatória")
-    @Positive(message = "Duração deve ser maior que zero")
     private Integer durationMinutes;
+    private boolean active;
+
+    public static TreatmentResponseDTO from(Treatment t) {
+        return new TreatmentResponseDTO(
+                t.getId(), t.getName(), t.getDescription(),
+                t.getPrice(), t.getDurationMinutes(), t.isActive()
+        );
+    }
 }
