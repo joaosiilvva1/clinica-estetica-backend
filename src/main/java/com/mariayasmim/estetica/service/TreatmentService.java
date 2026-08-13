@@ -1,81 +1,61 @@
 package com.mariayasmim.estetica.service;
 
-import com.mariayasmim.estetica.dto.TreatmentDTO;
+import com.mariayasmim.estetica.dto.TreatmentRequestDTO;
+import com.mariayasmim.estetica.dto.TreatmentResponseDTO;
 import com.mariayasmim.estetica.entity.Treatment;
+import com.mariayasmim.estetica.exception.ResourceNotFoundException;
 import com.mariayasmim.estetica.repository.TreatmentRepository;
-import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class TreatmentService {
 
     private final TreatmentRepository treatmentRepository;
 
-    public TreatmentService(TreatmentRepository treatmentRepository) {
-        this.treatmentRepository = treatmentRepository;
-    }
-
-    @Transactional
-    public TreatmentDTO create(TreatmentDTO dto) {
-        Treatment treatment = dto.toEntity();
-        Treatment saved = treatmentRepository.save(treatment);
-        return TreatmentDTO.fromEntity(saved);
-    }
-
-    public List<TreatmentDTO> listAll() {
-        return treatmentRepository.findAll().stream()
-                .map(TreatmentDTO::fromEntity)
+    public List<TreatmentResponseDTO> listActive() {
+        return treatmentRepository.findByActiveTrue().stream()
+                .map(TreatmentResponseDTO::from)
                 .collect(Collectors.toList());
     }
 
-    public List<TreatmentDTO> listActive() {
+    public List<TreatmentResponseDTO> listAll() {
         return treatmentRepository.findAll().stream()
-                .filter(Treatment::isActive)
-                .map(TreatmentDTO::fromEntity)
+                .map(TreatmentResponseDTO::from)
                 .collect(Collectors.toList());
     }
 
-    public TreatmentDTO getById(UUID id) {
+    public TreatmentResponseDTO create(TreatmentRequestDTO dto) {
+        Treatment treatment = Treatment.builder()
+                .name(dto.getName())
+                .description(dto.getDescription())
+                .price(dto.getPrice())
+                .durationMinutes(dto.getDurationMinutes())
+                .active(true)
+                .build();
+        return TreatmentResponseDTO.from(treatmentRepository.save(treatment));
+    }
+
+    public TreatmentResponseDTO update(UUID id, TreatmentRequestDTO dto) {
         Treatment treatment = treatmentRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Tratamento não encontrado com o ID: " + id));
-        return TreatmentDTO.fromEntity(treatment);
+                .orElseThrow(() -> new ResourceNotFoundException("Tratamento não encontrado."));
+        treatment.setName(dto.getName());
+        treatment.setDescription(dto.getDescription());
+        treatment.setPrice(dto.getPrice());
+        treatment.setDurationMinutes(dto.getDurationMinutes());
+        return TreatmentResponseDTO.from(treatmentRepository.save(treatment));
     }
 
-    @Transactional
-    public TreatmentDTO update(UUID id, TreatmentDTO dto) {
-        Treatment existing = treatmentRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Tratamento não encontrado com o ID: " + id));
-
-        existing.setName(dto.getName());
-        existing.setDescription(dto.getDescription());
-        existing.setPrice(dto.getPrice());
-        existing.setDurationMinutes(dto.getDurationMinutes());
-        if (dto.getActive() != null) {
-            existing.setActive(dto.getActive());
-        }
-
-        Treatment updated = treatmentRepository.save(existing);
-        return TreatmentDTO.fromEntity(updated);
-    }
-
-    @Transactional
-    public void deactivate(UUID id) {
+    // Em vez de delete: desativa. Tratamentos já usados em agendamentos não podem sumir da tabela.
+    public TreatmentResponseDTO setActive(UUID id, boolean active) {
         Treatment treatment = treatmentRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Tratamento não encontrado com o ID: " + id));
-        treatment.setActive(false);
-        treatmentRepository.save(treatment);
-    }
-
-    @Transactional
-    public void delete(UUID id) {
-        if (!treatmentRepository.existsById(id)) {
-            throw new EntityNotFoundException("Tratamento não encontrado com o ID: " + id);
-        }
-        treatmentRepository.deleteById(id);
+                .orElseThrow(() -> new ResourceNotFoundException("Tratamento não encontrado."));
+        treatment.setActive(active);
+        return TreatmentResponseDTO.from(treatmentRepository.save(treatment));
     }
 }
