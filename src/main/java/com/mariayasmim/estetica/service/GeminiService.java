@@ -2,6 +2,8 @@ package com.mariayasmim.estetica.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import java.util.Map;
 
 @Service
 public class GeminiService {
+    private static final Logger log = LoggerFactory.getLogger(GeminiService.class);
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
     private final String apiKey;
@@ -45,28 +48,31 @@ public class GeminiService {
         }
         try {
             Map<String, Object> body = Map.of(
-                "system_instruction", Map.of("parts", new Object[]{Map.of("text", SYSTEM_PROMPT)}),
-                "contents", new Object[]{Map.of("role", "user", "parts", new Object[]{Map.of("text", message)})}
+                    "system_instruction", Map.of("parts", new Object[]{Map.of("text", SYSTEM_PROMPT)}),
+                    "contents", new Object[]{Map.of("role", "user", "parts", new Object[]{Map.of("text", message)})}
             );
             String json = objectMapper.writeValueAsString(body);
             URI uri = URI.create("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent");
             HttpRequest request = HttpRequest.newBuilder(uri)
-                .timeout(Duration.ofSeconds(30))
-                .header(HttpHeaders.CONTENT_TYPE, "application/json")
-                .header("x-goog-api-key", apiKey)
-                .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
-                .build();
+                    .timeout(Duration.ofSeconds(30))
+                    .header(HttpHeaders.CONTENT_TYPE, "application/json")
+                    .header("x-goog-api-key", apiKey)
+                    .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
+                    .build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() / 100 != 2) {
+                log.error("Gemini respondeu HTTP {} - body: {}", response.statusCode(), response.body());
                 throw new IllegalStateException("Gemini respondeu HTTP " + response.statusCode());
             }
             JsonNode root = objectMapper.readTree(response.body());
             JsonNode text = root.path("candidates").path(0).path("content").path("parts").path(0).path("text");
             if (text.isMissingNode() || text.asText().isBlank()) {
+                log.warn("Resposta do Gemini sem texto utilizavel. Body: {}", response.body());
                 return "Desculpe, não consegui responder agora. Pode tentar novamente?";
             }
             return text.asText();
         } catch (Exception e) {
+            log.error("Falha ao chamar a API do Gemini", e);
             return "Desculpe, estou com uma instabilidade momentânea. Tente novamente em alguns instantes.";
         }
     }
