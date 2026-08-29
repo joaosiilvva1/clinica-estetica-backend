@@ -1,6 +1,7 @@
 package com.mariayasmim.estetica.controller;
 
-import com.mariayasmim.estetica.dto.TreatmentDTO;
+import com.mariayasmim.estetica.dto.TreatmentRequestDTO;
+import com.mariayasmim.estetica.dto.TreatmentResponseDTO;
 import com.mariayasmim.estetica.service.TreatmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,39 +18,32 @@ public class TreatmentController {
 
     private final TreatmentService treatmentService;
 
-    // --- Público: catálogo que a cliente final vê antes de agendar ---
-
+    // --- Público: lista de tratamentos ativos, pra home do site ---
     @GetMapping("/api/treatments/public")
-    public ResponseEntity<List<TreatmentDTO>> listPublicCatalog() {
+    public ResponseEntity<List<TreatmentResponseDTO>> listPublic() {
         return ResponseEntity.ok(treatmentService.listActive());
     }
 
-    @GetMapping("/api/treatments/public/{id}")
-    public ResponseEntity<TreatmentDTO> getPublicTreatment(@PathVariable UUID id) {
-        return ResponseEntity.ok(treatmentService.getById(id));
-    }
-
-    // --- Administrativo: gestão do catálogo, protegido por ROLE_ADMIN em SecurityConfig ---
-
+    // --- Administrativo: protegido por ROLE_ADMIN em SecurityConfig ---
     @GetMapping("/api/admin/treatments")
-    public ResponseEntity<List<TreatmentDTO>> listAllForAdmin() {
+    public ResponseEntity<List<TreatmentResponseDTO>> listAll() {
         return ResponseEntity.ok(treatmentService.listAll());
     }
 
     @PostMapping("/api/admin/treatments")
-    public ResponseEntity<TreatmentDTO> create(@Valid @RequestBody TreatmentDTO dto) {
-        TreatmentDTO created = treatmentService.create(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    public ResponseEntity<TreatmentResponseDTO> create(@Valid @RequestBody TreatmentRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(treatmentService.create(dto));
     }
 
     @PutMapping("/api/admin/treatments/{id}")
-    public ResponseEntity<TreatmentDTO> update(@PathVariable UUID id, @Valid @RequestBody TreatmentDTO dto) {
+    public ResponseEntity<TreatmentResponseDTO> update(
+            @PathVariable UUID id, @Valid @RequestBody TreatmentRequestDTO dto) {
         return ResponseEntity.ok(treatmentService.update(id, dto));
     }
 
-    @DeleteMapping("/api/admin/treatments/{id}")
-    public ResponseEntity<Void> deactivate(@PathVariable UUID id) {
-        treatmentService.deactivate(id);
-        return ResponseEntity.noContent().build();
+    @PatchMapping("/api/admin/treatments/{id}/status")
+    public ResponseEntity<TreatmentResponseDTO> setActive(
+            @PathVariable UUID id, @RequestParam boolean active) {
+        return ResponseEntity.ok(treatmentService.setActive(id, active));
     }
 }
