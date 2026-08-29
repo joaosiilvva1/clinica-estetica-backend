@@ -59,11 +59,23 @@ public class GeminiService {
                     .header("x-goog-api-key", apiKey)
                     .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
                     .build();
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() / 100 != 2) {
-                log.error("Gemini respondeu HTTP {} - body: {}", response.statusCode(), response.body());
-                throw new IllegalStateException("Gemini respondeu HTTP " + response.statusCode());
+
+            HttpResponse<String> response = null;
+            int maxAttempts = 3;
+            for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+                response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                if (response.statusCode() / 100 == 2) {
+                    break;
+                }
+                boolean retryable = response.statusCode() == 503 || response.statusCode() == 429;
+                log.error("Gemini respondeu HTTP {} (tentativa {}/{}) - body: {}",
+                        response.statusCode(), attempt, maxAttempts, response.body());
+                if (!retryable || attempt == maxAttempts) {
+                    throw new IllegalStateException("Gemini respondeu HTTP " + response.statusCode());
+                }
+                Thread.sleep(500L * attempt); // backoff simples: 0.5s, 1s
             }
+
             JsonNode root = objectMapper.readTree(response.body());
             JsonNode text = root.path("candidates").path(0).path("content").path("parts").path(0).path("text");
             if (text.isMissingNode() || text.asText().isBlank()) {
