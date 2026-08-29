@@ -54,7 +54,7 @@ public class GeminiService {
             String json = objectMapper.writeValueAsString(body);
             URI uri = URI.create("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent");
             HttpRequest request = HttpRequest.newBuilder(uri)
-                    .timeout(Duration.ofSeconds(30))
+                    .timeout(Duration.ofSeconds(15))
                     .header(HttpHeaders.CONTENT_TYPE, "application/json")
                     .header("x-goog-api-key", apiKey)
                     .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
@@ -63,7 +63,16 @@ public class GeminiService {
             HttpResponse<String> response = null;
             int maxAttempts = 3;
             for (int attempt = 1; attempt <= maxAttempts; attempt++) {
-                response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                try {
+                    response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                } catch (java.io.IOException ex) {
+                    log.error("Erro de rede ao chamar o Gemini (tentativa {}/{}): {}", attempt, maxAttempts, ex.toString());
+                    if (attempt == maxAttempts) {
+                        throw ex;
+                    }
+                    Thread.sleep(500L * attempt);
+                    continue;
+                }
                 if (response.statusCode() / 100 == 2) {
                     break;
                 }
