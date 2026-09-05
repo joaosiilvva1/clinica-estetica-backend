@@ -1,6 +1,7 @@
 package com.mariayasmim.estetica.security;
 
 import com.mariayasmim.estetica.security.JwtFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -52,13 +53,17 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // A MÁGICA ACONTECE AQUI:
+    // Origem liberada apenas para os domínios reais do projeto (produção + qualquer preview
+    // da Vercel do mobile + localhost em dev). Antes era "*" com allowCredentials(true), o
+    // que deixava QUALQUER site da internet fazer requisição autenticada pra API.
+    @Value("${cors.allowed-origin-patterns:https://*.vercel.app,http://localhost:*}")
+    private String[] allowedOriginPatterns;
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        
-        // AllowedOriginPatterns("*") força a liberação total para qualquer domínio (Vercel, localhost, etc)
-        configuration.setAllowedOriginPatterns(List.of("*"));
+
+        configuration.setAllowedOriginPatterns(List.of(allowedOriginPatterns));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

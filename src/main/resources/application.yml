@@ -22,20 +22,20 @@ jwt:
   expiration-ms: ${JWT_EXPIRATION_MS:3600000}
 
 business:
-  opening-hour: 9
-  closing-hour: 18
+  opening-hour: ${BUSINESS_OPENING_HOUR:9}
+  closing-hour: ${BUSINESS_CLOSING_HOUR:18}
   zone-id: America/Sao_Paulo
   slot-granularity-minutes: 30
 
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 management:
   endpoints:
     web:
       exposure:
         include: health
-# Groq API (configure GROQ_API_KEY no ambiente; nunca exponha a chave no frontend)
-groq:
-  api-key: ${GROQ_API_KEY:}
-  model: ${GROQ_MODEL:llama-3.3-70b-versatile}
+# Gemini API (GEMINI_API_KEY já configurada no Render; nunca exponha a chave no frontend)
+gemini:
+  api-key: ${GEMINI_API_KEY:}
+  model: ${GEMINI_MODEL:gemini-3.7-flash}
