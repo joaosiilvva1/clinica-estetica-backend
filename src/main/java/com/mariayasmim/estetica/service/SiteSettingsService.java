@@ -30,6 +30,43 @@ public class SiteSettingsService {
         settings.setWhatsapp(dto.getWhatsapp());
         settings.setOpeningHoursText(dto.getOpeningHoursText());
         settings.setInstagramUrl(dto.getInstagramUrl());
+
+        settings.setLogoUrl(dto.getLogoUrl());
+
+        settings.setHeroEyebrow(dto.getHeroEyebrow());
+        settings.setHeroTitle(dto.getHeroTitle());
+        settings.setHeroSubtitle(dto.getHeroSubtitle());
+        settings.setHeroTrustItemsJson(dto.getHeroTrustItemsJson());
+
+        settings.setBenefitsItemsJson(dto.getBenefitsItemsJson());
+
+        settings.setIndicationsSectionTitle(dto.getIndicationsSectionTitle());
+        settings.setIndicationsItemsJson(dto.getIndicationsItemsJson());
+
+        settings.setAboutBadgeText(dto.getAboutBadgeText());
+        settings.setAboutPhotoUrl(dto.getAboutPhotoUrl());
+
+        settings.setTreatmentsEyebrow(dto.getTreatmentsEyebrow());
+        settings.setTreatmentsSectionTitle(dto.getTreatmentsSectionTitle());
+        settings.setTreatmentsSectionSubtitle(dto.getTreatmentsSectionSubtitle());
+
+        settings.setLocationSectionTitle(dto.getLocationSectionTitle());
+        settings.setLocationSectionSubtitle(dto.getLocationSectionSubtitle());
+
+        settings.setBookingSectionTitle(dto.getBookingSectionTitle());
+        settings.setBookingSectionSubtitle(dto.getBookingSectionSubtitle());
+
+        settings.setTestimonialsSectionTitle(dto.getTestimonialsSectionTitle());
+        settings.setTestimonialsSectionSubtitle(dto.getTestimonialsSectionSubtitle());
+
+        settings.setFaqSectionTitle(dto.getFaqSectionTitle());
+        settings.setFaqSectionSubtitle(dto.getFaqSectionSubtitle());
+        settings.setFaqItemsJson(dto.getFaqItemsJson());
+
+        settings.setFooterTagline(dto.getFooterTagline());
+        settings.setFooterContactEmail(dto.getFooterContactEmail());
+        settings.setFooterCopyrightText(dto.getFooterCopyrightText());
+
         return SiteSettingsDTO.from(siteSettingsRepository.save(settings));
     }
 }
