@@ -38,4 +38,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
     List<Appointment> findByProfessionalIdAndScheduledAtBetweenAndStatusNotOrderByScheduledAt(
             UUID professionalId, Instant dayStart, Instant dayEnd, AppointmentStatus excludedStatus
     );
+
+    void deleteByTreatmentId(UUID treatmentId);
 }

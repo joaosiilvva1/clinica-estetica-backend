@@ -45,6 +45,13 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(TreatmentStillActiveException.class)
+    public ResponseEntity<ErrorResponseDTO> handleTreatmentStillActive(TreatmentStillActiveException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                ErrorResponseDTO.of(HttpStatus.CONFLICT.value(), "Conflict", ex.getMessage())
+        );
+    }
+
     /**
      * Rede de segurança: se o advisory lock + checagem de overlap em AppointmentService
      * falharem por algum motivo (ex.: chamada direta ao repository fora do fluxo normal),

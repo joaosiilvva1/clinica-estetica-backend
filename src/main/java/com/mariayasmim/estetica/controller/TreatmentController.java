@@ -46,4 +46,12 @@ public class TreatmentController {
             @PathVariable UUID id, @RequestParam boolean active) {
         return ResponseEntity.ok(treatmentService.setActive(id, active));
     }
+
+    // Exclusão definitiva (apaga o tratamento e, em cascata, os agendamentos
+    // vinculados a ele). O service exige que o tratamento já esteja inativo.
+    @DeleteMapping("/api/admin/treatments/{id}")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        treatmentService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
 }
