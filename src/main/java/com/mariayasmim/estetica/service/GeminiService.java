@@ -20,6 +20,7 @@ import java.util.Map;
 public class GeminiService {
 
     private static final Logger log = LoggerFactory.getLogger(GeminiService.class);
+    private static final int MAX_UNAVAILABLE_RETRIES = 2;
     private static final String FALLBACK_REPLY =
             "Desculpe, não consegui responder agora. Tente novamente em instantes ou fale direto com a Maria Yasmim pelo WhatsApp.";
 
@@ -76,20 +77,9 @@ public class GeminiService {
                     )
             );
 
-            @SuppressWarnings("unchecked")
-            Map<String, Object> response = restClient.post()
-                    .uri("/models/{model}:generateContent", model)
-                    .header("x-goog-api-key", apiKey)
-                    .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                    .body(requestBody)
-                    .retrieve()
-                    .body(Map.class);
+            Map<String, Object> response = generateContent(requestBody);
 
             return extractText(response);
-        } catch (RestClientResponseException e) {
-            // Nunca registre a chave, a pergunta da cliente ou o corpo da resposta.
-            log.error("Gemini indisponível: HTTP {}, modelo {}", e.getStatusCode().value(), model);
-            throw unavailable();
         } catch (RestClientException e) {
             log.error("Gemini: falha de conexão ou tempo limite, modelo {}", model);
             throw unavailable();
@@ -98,6 +88,36 @@ public class GeminiService {
         } catch (RuntimeException e) {
             log.error("Gemini: resposta inválida, modelo {}", model);
             throw unavailable();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> generateContent(Map<String, Object> requestBody) {
+        for (int attempt = 0; ; attempt++) {
+            try {
+                return restClient.post()
+                        .uri("/models/{model}:generateContent", model)
+                        .header("x-goog-api-key", apiKey)
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .body(requestBody)
+                        .retrieve()
+                        .body(Map.class);
+            } catch (RestClientResponseException e) {
+                if (e.getStatusCode().value() != HttpStatus.SERVICE_UNAVAILABLE.value()
+                        || attempt >= MAX_UNAVAILABLE_RETRIES) {
+                    log.error("Gemini indisponível: HTTP {}, modelo {}", e.getStatusCode().value(), model);
+                    throw unavailable();
+                }
+
+                log.warn("Gemini temporariamente indisponível (HTTP 503); nova tentativa {}/{} para o modelo {}",
+                        attempt + 1, MAX_UNAVAILABLE_RETRIES, model);
+                try {
+                    Thread.sleep(500L * (attempt + 1));
+                } catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                    throw unavailable();
+                }
+            }
         }
     }
 

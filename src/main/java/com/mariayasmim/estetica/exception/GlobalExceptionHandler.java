@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
@@ -11,6 +12,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
@@ -88,6 +90,20 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDTO> handleAccessDenied(AccessDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
                 ErrorResponseDTO.of(HttpStatus.FORBIDDEN.value(), "Forbidden", "Acesso negado.")
+        );
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorResponseDTO> handleResponseStatus(ResponseStatusException ex) {
+        HttpStatusCode status = ex.getStatusCode();
+        HttpStatus knownStatus = HttpStatus.resolve(status.value());
+        String error = knownStatus == null ? "Request Failed" : knownStatus.getReasonPhrase();
+        String message = ex.getReason() == null || ex.getReason().isBlank()
+                ? error
+                : ex.getReason();
+
+        return ResponseEntity.status(status).body(
+                ErrorResponseDTO.of(status.value(), error, message)
         );
     }
 

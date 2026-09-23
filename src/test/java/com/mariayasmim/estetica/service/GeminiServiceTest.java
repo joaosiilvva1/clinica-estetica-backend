@@ -34,6 +34,17 @@ class GeminiServiceTest {
         assertEquals(503, assertThrows(ResponseStatusException.class, () -> service.chat("Olá")).getStatusCode().value());
         server.verify();
     }
+    @Test void retriesTemporaryProviderUnavailableOnceAndReturnsTheReply() {
+        var builder = RestClient.builder().baseUrl("https://example.test");
+        var server = MockRestServiceServer.bindTo(builder).build();
+        var service = new GeminiService(builder.build(), "test-key", "test-model");
+        server.expect(requestTo("https://example.test/models/test-model:generateContent"))
+            .andRespond(withStatus(HttpStatus.SERVICE_UNAVAILABLE));
+        server.expect(requestTo("https://example.test/models/test-model:generateContent"))
+            .andRespond(withSuccess("{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"Resposta após nova tentativa.\"}]}}]}", MediaType.APPLICATION_JSON));
+        assertEquals("Resposta após nova tentativa.", service.chat("Olá"));
+        server.verify();
+    }
     @Test void emptyModelReplyIsUnavailable() {
         var builder = RestClient.builder().baseUrl("https://example.test");
         var server = MockRestServiceServer.bindTo(builder).build();
