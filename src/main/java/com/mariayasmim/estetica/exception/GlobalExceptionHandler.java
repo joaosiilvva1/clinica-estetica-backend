@@ -12,6 +12,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -30,6 +31,14 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest().body(
                 ErrorResponseDTO.ofValidation(HttpStatus.BAD_REQUEST.value(), "Bad Request", fieldErrors)
+        );
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponseDTO> handleUploadTooLarge(MaxUploadSizeExceededException ex) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(
+                ErrorResponseDTO.of(HttpStatus.PAYLOAD_TOO_LARGE.value(), "Payload Too Large",
+                        "Envie uma foto de até 8 MB.")
         );
     }
 

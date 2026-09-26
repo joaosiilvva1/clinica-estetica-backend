@@ -2,6 +2,11 @@ spring:
   application:
     name: estetica
 
+  servlet:
+    multipart:
+      max-file-size: 8MB
+      max-request-size: 9MB
+
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/estetica_db}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
@@ -39,3 +44,4 @@ management:
 gemini:
   api-key: ${GEMINI_API_KEY:}
   model: ${GEMINI_MODEL:gemini-3.7-flash}
+  image-model: ${GEMINI_IMAGE_MODEL:gemini-3.1-flash-image}
